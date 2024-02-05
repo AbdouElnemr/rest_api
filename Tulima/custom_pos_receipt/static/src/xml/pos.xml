@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+    <xpath expr="//div[hasclass('pos-receipt')]" position="replace">
+    <div class="pos-receipt">
+            <t t-if="receipt.company.logo">
+                <img class="pos-receipt-logo" t-att-src="receipt.company.logo" alt="Logo"/>
+                <br/>
+            </t>
+        <t t-if="!receipt.company.logo">
+                <h2 class="pos-receipt-center-align">
+                    <t t-esc="receipt.company.name"/>
+                </h2>
+            <br/>
+            </t>
+        <div class="pos-receipt-contact">
+                   <t t-if="receipt.company.contact_address">
+                    <div><t t-esc="receipt.company.contact_address" /></div>
+                </t>
+            <div>
+                 <div><t t-esc="env.pos.config.name"/></div>
+             </div>
+            <t t-if="receipt.header_html">
+                    <t t-out="receipt.header_html"/>
+                </t>
+            <t t-if="!receipt.header_html and receipt.header">
+                    <div style="white-space:pre-line"><t t-esc="receipt.header" /></div>
+                </t>
+         </div>
+        <br/>
+        <br/>
+        <div style='text-align:center;border-bottom: 1px sold black;'>
+                <strong> فاتورة ضريبية -TAX INVOICE  </strong>
+            </div>
+        <div style='text-align:center;border-bottom: 1px dashed black;'>
+            <span>TRN:104016866600003</span>
+                         </div>
+
+        <table class='receipt-header' style="font-size:11px ;">
+        <colgroup>
+                        <col width='25%'/>
+            <col width='25%'/>
+            <col width='25%'/>
+            <col width='25%'/>
+                    </colgroup>
+
+            <tr style="">
+                        <td style='text-align:left'> BILL No. </td>
+
+                <td style='text-align:center' colspan="2">
+                            <span t-esc="receipt.name"/>
+                        </td>
+                <td style='text-align:right'>رقم الفاتورة</td>
+            </tr>
+            <tr>
+                <td style='text-align:left'>DATE TIME </td>
+                <td style='text-align:center' colspan="2">
+                            <span t-esc="receipt.date.localestring"/>
+                        </td>
+                <td style='text-align:right'>
+                     تاريخ والوقت
+                </td>
+
+                    </tr>
+            <tr style="">
+                 <td style='text-align:left'>COUNTER: </td>
+                <td style='text-align:center' colspan="2">
+                            <span t-esc="receipt.cashier"/>
+                        </td>
+            </tr>
+            <tr>
+                <td style='text-align:left'>SERVED BY: </td>
+                <td style='text-align:center' colspan="2">
+                            <span t-esc="receipt.cashier"/>
+                        </td>
+                </tr>
+        </table>
+        <div style="border-bottom: 1px dashed black;"/>
+        <table class='receipt-header' style="font-size:11px ;">
+                    <colgroup>
+                        <col width='30%'/>
+                        <col width='70%'/>
+                    </colgroup>
+            <tr t-if="receipt.partner" style="">
+                        <td style='text-align:left'>Customer: </td>
+                <td style='text-align:center'>
+                            <span t-esc="receipt.partner.name"/>
+                        </td>
+                    </tr>
+            <tr t-if="receipt.partner" style="">
+                <t t-if="receipt.partner.phone || receipt.partner.mobile">
+                         <td style='text-align:left'>phone/mobile: </td>
+                    <td style='text-align:center'>
+                            <span t-if="receipt.partner.phone" t-esc="receipt.partner.phone"/>
+                        <span t-if="receipt.partner.phone and receipt.partner.mobile">/</span>
+                        <span t-if="receipt.partner.mobile" t-esc="receipt.partner.mobile"/>
+                        </td>
+                </t>
+
+
+                    </tr>
+            <tr t-if="receipt.partner and receipt.partner.trn" style="">
+                        <td style='text-align:left'>Customer TRN: </td>
+                <td style='text-align:center'>
+                            <span t-if="receipt.partner.trn" t-esc="receipt.partner.trn"/>
+                        </td>
+
+                    </tr>
+            <tr t-if="receipt.partner and receipt.partner.address" style="">
+                        <td style='text-align:left'>Customer Address: </td>
+                <td style='text-align:center'>
+                            <span t-if="receipt.partner.address" t-esc="receipt.partner.address"/>
+                        </td>
+
+                    </tr>
+            <tr t-if="receipt.partner and receipt.partner.email" style="">
+                        <td style='text-align:left'>Email : </td>
+                <td style='text-align:center'>
+                            <span t-if="receipt.partner.email" t-esc="receipt.partner.email"/>
+                        </td>
+
+                    </tr>
+
+
+                </table>
+        <br/>
+
+        <!-- Orderlines -->
+
+        <div class="orderlines">
+                <table class='receipt-orderlines table-bordered '>
+                    <colgroup>
+                        <col width='10%'/>
+                        <col width='45%'/>
+                        <col width='10%'/>
+                        <col width='15%'/>
+                        <col width='10%'/>
+                        <col width='10%'/>
+                    </colgroup>
+                    <tr style="border: 1px solid black;">
+                        <th>رقم</th>
+                        <th>تفاصيل</th>
+                        <th>كمية</th>
+                        <th>السعر</th>
+                        <th>خصم</th>
+                        <th>كمية</th>
+                    </tr>
+                    <tr style="border: 1px solid black;">
+                        <th>NO.</th>
+                        <th>Particulars</th>
+                        <th>Qty</th>
+                        <th>Rat</th>
+                        <th>Disc</th>
+                        <th>Amount</th>
+                    </tr>
+                    <t t-set="x" t-value="0"/>
+                    <t t-set="total_qty" t-value="0"/>
+                    <tr t-foreach="orderlines" t-as="line" style="border: 1px solid black;" t-key="line.id">
+                                            <t t-set="x" t-value="x +1 "/>
+                        <td style='text-align:left'>
+                            <span t-out="x"/>
+                        </td>
+                        <td style='text-align:left'>
+                            <t t-esc="line.get_product().display_name"/>
+                                                   </td>
+
+                        <td>
+                        <t t-esc="Math.round(line.quantity * Math.pow(10, env.pos.dp['Product Unit of Measure'])) / Math.pow(10, env.pos.dp['Product Unit of Measure'])"/>
+                            <t t-if="!line.is_in_unit" t-esc="line.unit_name"/>
+                            <t t-set="total_qty" t-value="total_qty +line.quantity"/>
+
+
+                        </td>
+                        <td>
+                            <span class="price_display">
+                                                                                        <t t-esc="env.pos.format_currency(line.get_unit_display_price())"/>
+
+                                <t t-esc="env.pos.format_currency_no_symbol(line.price_display)"/>
+
+
+
+                    </span>
+
+                        </td>
+                        <td><t t-esc="line.discount" />%</td>
+                        <td>
+                            <t t-esc="env.pos.format_currency_no_symbol(line.get_price_with_tax())"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span>
+                                Total Number of items
+                            </span>
+                        </td>
+                        <td>
+                            <span t-out="total_qty"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        <br/>
+
+        <table class='receipt-orderlines table-bordered'>
+                    <colgroup>
+                        <col width='30%'/>
+                        <col width='30%'/>
+                        <col width='30%'/>
+
+                    </colgroup>
+            <tr style="border: 1px solid black;">
+                        <th>نسبة ض.ق.م</th>
+                <th>المبلغ قبل (ض.ق.م) </th>
+                <th>قيمة ض.ق.م </th>
+                    </tr>
+            <tr style="border: 1px solid black;">
+                        <th>VAT%</th>
+                <th>AMOUNT (exel vat)</th>
+                <th>VAT AMOUNT</th>
+                    </tr>
+            <tr style="border: 1px solid black;">
+                <td>5%</td>
+                <td>  <span t-esc="env.pos.format_currency(receipt.total_without_tax)"/></td>
+                <td>  <span t-esc="env.pos.format_currency(receipt.total_tax)"/></td>
+            </tr>
+
+        </table>
+        <br/>
+        <strong>Payments بيانات الدفع</strong>
+        <table class='receipt-total' width='100%'>
+                    <colgroup>
+                        <col width='50%'/>
+                        <col width='50%'/>
+                    </colgroup>
+            <tr t-foreach="receipt.paymentlines" t-as="line" t-key="line.cid">
+                <td>                    <t t-esc="line.name"/>
+                    </td>
+                <td><span t-esc="env.pos.format_currency_no_symbol(line.amount)" class="pos-receipt-right-align"/></td>
+                         </tr>
+            <tr style="">
+                <td>TOTAL</td>
+                <td>                <span t-esc="env.pos.format_currency(receipt.total_with_tax)"
+                                          class="pos-receipt-right-align"/>
+            </td>
+                                     </tr>
+
+
+            <tr style="">
+                            <td>CHANGE</td>
+                <td>                <span t-esc="env.pos.format_currency(receipt.change)"
+                                          class="pos-receipt-right-align"/>
+            </td>
+                                     </tr>
+                     </table>
+        <t t-if="receipt.total_discount">
+                        <div>
+                            You saved :
+                            <span t-esc="env.pos.format_currency(receipt.total_discount)"
+                                  class="pos-receipt-right-align"/>
+                        </div>
+                    </t>
+
+        <br/>
+
+        <div class="before-footer"/>
+
+        <div t-if="receipt.pos_qr_code">
+                <br/>
+            <br/>
+            <div class="pos-receipt-order-data">
+                    Scan me to request an invoice for your purchase.
+                </div>
+            <img id="posqrcode" t-att-src="receipt.pos_qr_code" class="pos-receipt-logo"/>
+            </div>
+
+        <!-- Footer -->
+        <div class="pos-receipt-center-align">
+                            <strong style="border-bottom: 1px solid black">
+                                Terms  &amp; conditions applied.
+                            </strong>
+            <br/>
+            <br/>
+            Please confirm items with reviewing invoice prior to leaving store.
+            <br/>
+            <strong>
+                Return  &amp; Exchange Policy
+            </strong>
+            <br/>
+            <br/>
+            Goods Once sold can be exchanged within 7 days
+            <br/>
+            No Cash refund will be provided.
+            <br/>
+            No Exchanged if the Original Packaging is Damaged/Opened
+            <br/>
+            Goods Once Exchange Cannot Be Re-Exchanged.
+            <br/>
+            <strong style="border-bottom: 1px solid black">
+            تطبيق الشروط والاحكام
+            </strong>
+            <br/>
+            <br/>
+            يرجى تأكيد العناصر مع مراجعة الفاتورة قبل مغادرة المتجر.
+            <br/>
+            <strong>
+            سياسة الاسترجاع والاستبدال
+             </strong>
+            <br/>
+            <br/>
+            الاستبدال خلال 7 ايام من تاريخ الفاتورة بشرط ان تكون البضاعة بحالة جيدة (نفس حالة الشراء)
+            <br/>
+            لايوجد استرجاع نقدي للبضاعة المشتراه.
+            <br/>
+            لا يمكن طلب الاستبدال في حالة فتح المغلف او اي تلف.
+            <br/>
+            لا يمكن استبدال البضاعة غير مرة واحدة ولا يمكن استرجاع البضاعة المستبدلة مرة أخرى.
+            <br/>
+            FOR CUSTOMER CARE/CONCERN PLEASE EMAIL لخدمة العملاء والشكاوي والاقتراحات
+            <br/>
+            boxpark@babolat.ae
+            <br/>
+            +971 4 251 0 234
+            <br/>
+            Powered by BLACKBOX
+            <br/>
+            www.blackbox.ae
+            <br/>
+            support@blackbox.ae
+            <br/>
+            +971555020092
+            <br/>
+        </div>
+        <div t-if="receipt.footer_html" class="pos-receipt-center-align">
+                <t t-out="receipt.footer"/>
+            </div>
+
+        <div t-if="!receipt.footer_html and receipt.footer" class="pos-receipt-center-align"
+             style="white-space:pre-line">
+                <br/>
+            <t t-esc="receipt.footer"/>
+            <br/>
+            <br/>
+            </div>
+
+
+        <br/>
+        <div class="pos-receipt-order-data">
+              Receipt :   <div><t t-esc="receipt.name" /></div>
+            PAID Date :
+            <t t-if="receipt.date.localestring">
+                    <div><t t-esc="receipt.date.localestring" /></div>
+                </t>
+            <t t-else="">
+                    <div><t t-esc="receipt.date.validation_date" /></div>
+                </t>
+            </div>
+    </div>
+
+    </xpath>
+    </t>
+
+
+
+
+        </templates>
