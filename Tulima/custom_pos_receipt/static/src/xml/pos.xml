@@ -201,6 +201,12 @@
             </div>
         <br/>
 
+                        <div t-if="False">
+                    Total Taxes
+                    <span t-esc="env.pos.format_currency(receipt.total_tax)" class="pos-receipt-right-align"/>
+                </div>
+
+
         <table class='receipt-orderlines table-bordered'>
                     <colgroup>
                         <col width='30%'/>
