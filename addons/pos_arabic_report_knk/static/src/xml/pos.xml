@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-extend="HeaderButtonWidget">
+        <t t-jquery=".header-button" t-operation="append">
+            <div id="qrcode" style="display: none;" />
+            <div id="generate_barcode" style="display: none;">
+                <svg id="barcode"></svg>
+            </div>
+        </t>
+    </t>
+    <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+        <xpath expr="//t[@t-if='!receipt.company.logo']" position="replace" />
+        <xpath expr="//div[hasclass('orderlines')]" position="replace" />
+        <xpath expr="//t[@t-if='!isTaxIncluded']" position="replace" />
+        <xpath expr="//div[hasclass('pos-receipt-right-align')]" position="replace" />
+        <xpath expr="//div[hasclass('pos-receipt-amount')]" position="replace" />
+        <xpath expr="//t[@t-if='receipt.total_rounded != receipt.total_with_tax']" position="replace" />
+        <xpath expr="//t[@t-foreach='receipt.paymentlines']" position="replace" />
+        <xpath expr="//div[hasclass('pos-receipt-amount')]" position="replace" />
+        <xpath expr="//t[@t-if='receipt.total_discount']" position="replace" />
+        <xpath expr="//t[@t-if='isTaxIncluded']" position="replace" />
+        <xpath expr="//div[hasclass('before-footer')]" position="replace" />
+        <xpath expr="//div[hasclass('pos-receipt-center-align')]" position="replace" />
+        <xpath expr="//div[hasclass('after-footer')]" position="replace" />
+        <xpath expr="//div[hasclass('pos-receipt-order-data')]" position="replace" />
+        <xpath expr="//div[hasclass('pos-receipt')]" position="attributes">
+            <attribute name="style">font-family:"Arial";</attribute>
+        </xpath>
+        <xpath expr="//t[@t-if='receipt.company.logo']" position="replace">
+            <t t-if="env.pos.company_logo_base64">
+                <div style="text-align:center;">
+                    <img t-att-src="env.pos.company_logo_base64" style="max-height: 140px;width:auto;height:auto;" />
+                </div>
+            </t>
+        </xpath>
+        <xpath expr="//div[hasclass('pos-receipt-contact')]" position="replace">
+            <div style="text-align: center;font-weight: bold;" t-if="env.pos.company.sltech_header1" t-esc="env.pos.company.sltech_header1" />
+            <div style="text-align: center;font-weight: bold;" t-if="env.pos.company.sltech_header2" t-esc="env.pos.company.sltech_header2" />
+            <div style="text-align: center;" t-if="env.pos.company.sltech_header3" t-esc="env.pos.company.sltech_header3" />
+            <div style="text-align: center;" t-if="env.pos.company.sltech_header4" t-esc="env.pos.company.sltech_header4" />
+            <div style="text-align:center;">
+                <t t-if='receipt.company.company_registry'>
+                    <span>CR. </span>
+                    <span>
+                        <t t-esc='receipt.company.company_registry' /></span>
+                    <span>:</span>
+                    <span>س ت.</span>
+                </t>
+                <br t-if='receipt.company.company_registry or receipt.company.vat' />
+                <t t-if='receipt.company.vat'>
+                    <span>VAT ID </span>
+                    <span>
+                        <t t-esc='receipt.company.vat' /></span>
+                    <span>:</span>
+                    <span>الرقم الضريبي</span>
+                </t>
+                <br />
+                <img t-att-src='receipt.qrcode_img' alt="QR CODE" />
+            </div>
+            <div style="border: 1px solid black">
+                <div style="text-align:center;">
+                    <span>Simplified Tax Invoice</span>
+                    <span>فاتورة ضريبية مبسطة</span>
+                </div>
+                <div style="text-align:center;">
+                    <span style="font-size: 13px;">Invoice No </span>
+                    <span style="font-size: 13px;">
+                        <t t-esc="receipt.name.replace('Order ','')" />
+                    </span>
+                    <span style="font-size: 13px;">:</span>
+                    <span style="font-size: 13px;">رقم الفاتورة</span>
+                </div>
+                <div style="text-align:center;">
+                    <span style="font-size: 13px;">Date&amp;Time </span>
+                    <span style="font-size: 13px;">
+                        <t t-esc="receipt.date.localestring" /></span>
+                    <span style="font-size: 13px;">:</span>
+                    <span style="font-size: 13px;">التاريخ والوقت</span>
+                </div>
+                <div style="text-align:center;">
+                    <span style="font-size: 13px;">POS </span>
+                    <span style="font-size: 13px;">
+                        <t t-esc="env.pos.config.name + ' ('+ env.pos.config.pos_session_username +')'" />
+                    </span>
+                    <span style="font-size: 13px;">نقطة البيع</span>
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <span style="font-weight: 800;">Items</span>
+                <span style="font-weight: 800;">الأصناف</span>
+            </div>
+            <t t-set="total_qty_items" t-value="0" />
+            <table class='sltech-receipt-orderlines'>
+                <tr>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;border-bottom: 1px solid white;text-align: center;">
+                        الوصف
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;border-bottom: 1px solid white;text-align: center;">
+                        الكمية
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;border-bottom: 1px solid white;text-align: center;">
+                        س الوحدة
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;border-bottom: 1px solid white;text-align: center;">
+                        الضريبة
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;border-bottom: 1px solid white;text-align: center;">
+                        السعر
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;text-align: center">
+                        <t t-esc="'Desc'" />
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;text-align: center">
+                        <t t-esc="'Qty'" />
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;text-align: center">
+                        <t t-esc="'P/U'" />
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;text-align: center">
+                        <t t-esc="'Tax'" />
+                    </td>
+                    <td style="width: 20%; font-size: 12px;  border: 1px solid black;text-align: center">
+                        <t t-esc="'Price'" />
+                    </td>
+                </tr>
+                <t t-foreach="orderlines" t-as="orderline">
+                    <tr>
+                        <td colspan="4" t-att-style="orderline_index==0 ? 'text-align: left;padding-top: 10px;' : 'text-align: left;'">
+                            <t t-esc="orderline.get_product().display_name" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="  font-size: 12px; text-align:center;">
+                            <span style="text-align:center;" t-if="orderline.get_product().barcode">
+                                <t t-esc="orderline.get_product().barcode" />
+                            </span>
+                        </td>
+                        <td style="  font-size: 12px; text-align:left;">
+                            <span style="text-align:center;">
+                                <t t-esc="orderline.get_quantity_str_with_unit()" />
+                                <t t-set="total_qty_items" t-value="orderline.quantity+total_qty_items" />
+                            </span>
+                        </td>
+                        <td style="  font-size: 12px; text-align:center;">
+                            <span style="text-align:center;">
+                                <t t-esc="env.pos.format_currency(orderline.price)" />
+                            </span>
+                        </td>
+                        <td style="  font-size: 12px; text-align:center;">
+                            <span style="text-align:center;">
+                                <t t-esc="env.pos.format_currency(orderline.get_tax().toFixed(2))" />
+                            </span>
+                        </td>
+                        <td style="  font-size: 12px; text-align:right;">
+                            <span style="text-align:center;">
+                                <t t-esc="env.pos.format_currency(orderline.price * orderline.quantity)" /></span>
+                        </td>
+                    </tr>
+                </t>
+            </table>
+            <br />
+            <div style="text-align: center;">-----------------------------------------------------</div>
+            <table class='sltech-receipt-orderlines-details'>
+                <tr>
+                    <td style="width: 46%;text-align:center;">
+                        <span style="text-align:center;">Total</span>
+                    </td>
+                    <td style="width: 27%;text-align:center;">
+                        <span style="text-align:center;">Tax</span>
+                    </td>
+                    <td style="width: 27%;text-align:center;">
+                        <span style="text-align:center;">Gross</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;">
+                        <span style="text-align:center;"> الإجمالي بدون ضريبة</span>
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="text-align:center;">الضريبة</span>
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="text-align:center;">الاجمالي</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;">
+                        <span style="text-align:center;font-size: 12px;">
+                            <t t-esc="env.pos.format_currency(receipt.total_with_tax)" />
+                        </span>
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="text-align:center;font-size: 12px;">
+                            <t t-esc="env.pos.format_currency(receipt.total_tax)" /></span>
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="text-align:center;font-size: 12px;">
+                            <t t-esc="env.pos.format_currency(receipt.total_with_tax + receipt.total_tax)" />
+                        </span>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <table class='sltech-receipt-orderlines-details'>
+                <t t-foreach="receipt.paymentlines" t-as="line" t-key="line.cid">
+                    <tr style="border: 1px solid black;">
+                        <td style="width: 33%; border: 1px solid black;text-align: left;padding:2px;">
+                            <span>
+                                <t t-esc="line.name" /></span>
+                        </td>
+                        <td style="width: 33%;border: 1px solid black;padding:2px;">
+                            <span style="font-size: 12px;">
+                                <t t-esc="env.pos.format_currency(line.amount)" /></span>
+                        </td>
+                        <td style="width: 95px;text-align: right;border: 1px solid black;padding:2px;">
+                            <span>
+                                <t t-esc="line.arabic_translate" />
+                            </span>
+                        </td>
+                    </tr>
+                </t>
+                <tr style="border: 1px solid black;">
+                    <td style="width: 33%; border: 1px solid black; text-align: left;padding:2px;">
+                        <span>
+                            <t t-esc="'Change'" /></span>
+                    </td>
+                    <td style="width: 33%; border: 1px solid black;padding:2px;">
+                        <span style="font-size: 12px;">
+                            <t t-esc="env.pos.format_currency(receipt.change)" /></span>
+                    </td>
+                    <td style="width: 33%;text-align: right; border: 1px solid black;padding:2px;">
+                        <span>المتبقي</span>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <table class='sltech-receipt-orderlines-details'>
+                <tr>
+                    <td style="width: 22%; text-align: left;">
+                        <span>
+                            <t t-esc="'Customer'" /></span>
+                    </td>
+                    <td style="width: 63%; text-align: center;">
+                        <t t-if="env.pos.get_client()">
+                            <span>
+                                <t t-esc="env.pos.get_client().name" /></span>
+                        </t>
+                    </td>
+                    <td style="width: 15%;text-align: right;">
+                        <span>العميل</span><br />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 22%; text-align: left;">
+                        <span style="float:left;">VAT NO.</span>
+                    </td>
+                    <td style="width: 63%; text-align: center;">
+                        <t t-if="env.pos.get_client() and env.pos.get_client().vat">
+                            <span style='text-align: center;'>
+                                <t t-esc="env.pos.get_client().vat or ''" />
+                            </span>
+                        </t>
+                    </td>
+                    <td style="width: 15%;text-align: right;">
+                        <span style="float:right;">الرقم الضريبي</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 23%; text-align: left;">
+                        <span>Phone No.</span>
+                    </td>
+                    <td style="width: 63%;text-align: center;">
+                        <t t-if="env.pos.get_client() and env.pos.get_client().phone">
+                            <t style='text-align: center;' t-esc="env.pos.get_client().phone=='False' ? '' : env.pos.get_client().phone" />
+                        </t>
+                    </td>
+                    <td style="width: 15%;text-align: right;">
+                        <span>الهاتف</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 22%; text-align: left;">
+                        <span style="float:left;">
+                            <t t-esc="'Address'" /></span>
+                    </td>
+                    <td style="width: 63%;text-align: center;">
+                        <t t-if="env.pos.get_client()">
+                            <span style="text-align:center;">
+                                <t t-esc="env.pos.get_client().street or ''" />
+                            </span>
+                        </t>
+                    </td>
+                    <td style="width: 15%;text-align: right;">
+                        <span style="float:right;">العنوان</span>
+                    </td>
+                </tr>
+            </table>
+            <div style="text-align: center;">-----------------------------------------------------</div>
+            <div style="font-size: 14px">
+                <t t-set="items_qty" t-value="0" />
+                <t t-foreach="orderlines" t-as="line">
+                    <t t-set="items_qty" t-value="line.quantity + items_qty" />
+                </t>
+                <span style="float:left;">The total quantity of items </span>
+                <span>
+                    <t t-esc="items_qty" /></span>
+                <span>:</span>
+                <span>اجمالي عدد الاصناف</span>
+            </div>
+            <div t-if="env.pos.company.sltech_footer" style="text-align: center;">
+                <div style="text-align: center;">-----------------------------------------------------</div>
+                <span style="text-align: center;font-weight: 800">
+                    <t t-esc='env.pos.company.sltech_footer' /></span>
+            </div>
+            <t t-if="receipt.name">
+                <br />
+                <div style="text-align: center;">
+                    <div id="barcode">
+                        <img style="margin-top: 15px;width: 75;height: 75px;" t-att-src="receipt.barcode" />
+                    </div>
+                </div>
+                <br />
+            </t>
+        </xpath>
+    </t>
+</templates>

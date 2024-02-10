@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="point_of_sale.template" xml:space="preserve">
+    <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+        <xpath expr="//div[hasclass('orderlines')]" position="before">
+            <div style="margin-bottom:10px">
+                <t t-if="receipt.ni_customer_contact">
+                    <div>Contact:<t t-esc="receipt.ni_customer_contact" /></div>
+                </t>
+                <t t-if="receipt.ni_customer_flat">
+                    <div>Flat No:<t t-esc="receipt.ni_customer_flat" /></div>
+                </t>
+                <t t-if="receipt.ni_customer_bldg">
+                    <div>Bldg No:<t t-esc="receipt.ni_customer_bldg" /></div>
+                </t>
+                <t t-if="receipt.ni_customer_street">
+                    <div>Street:<t t-esc="receipt.ni_customer_street" /></div>
+                </t>
+                <t t-if="receipt.ni_customer_area">
+                    <div>Area:<t t-esc="receipt.ni_customer_area" /></div>
+                </t>
+            </div>
+        </xpath>         
+    </t>
+</templates>

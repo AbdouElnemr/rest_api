@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="pos_retail_restaurant">
+            <field name="name">pos.config.sync</field>
+            <field name="model">pos.config</field>
+            <field name="inherit_id" ref="pos_retail.pos_config_retail"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='screen_type']" position="attributes">
+                    <attribute name="invisible">False</attribute>
+                    <attribute name="attrs">{'invisible': [('sync_multi_session', '=', False)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='screen_type']" position="after">
+                    <field name="printer_ids"
+                           widget="many2many_tags"
+                           attrs="{'required': [('screen_type', '=', 'waiter'), ('sync_multi_session', '=', True)], 'invisible': ['|', ('screen_type', '!=', 'waiter'), ('sync_multi_session', '!=', True)]}"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

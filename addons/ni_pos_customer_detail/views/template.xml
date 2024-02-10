@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="ni_pos_customer assets" inherit_id="point_of_sale.assets">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" href="/ni_pos_customer_detail/static/src/css/screens.css"/>
+            <script type="text/javascript" src="/ni_pos_customer_detail/static/src/js/ni_models.js"></script>
+            <script type="text/javascript" src="/ni_pos_customer_detail/static/src/js/ni_popup_widget.js"></script>
+            <script type="text/javascript" src="/ni_pos_customer_detail/static/src/js/ni_contact_button.js"></script>
+        </xpath>
+    </template>
+</odoo>
+
