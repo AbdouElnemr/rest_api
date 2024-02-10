@@ -153,6 +153,8 @@ class SaleOrderEdit(models.Model):
                 d_s = 'Order Delivered'
             if current_order.delivery_status1 == 'ordered_cancelled':
                 d_s = 'Order Cancelled'
+            if current_order.delivery_status1 == 'order_confirmed':
+                d_s = 'Order Confirmed'
             data = {
                 'status': "200",
                 'message': "success",

@@ -90,7 +90,8 @@ class ProductsApi(http.Controller):
     @http.route('/create_order', type="json", auth='user', csrf=False, methods=["POST"])
     def create_order(self, **data):
         order_partner = ''
-        # shipping = request.env['delivery.carrier'].search([])[0]
+        shipping = request.env['delivery.carrier'].search([])[0]
+        print('pppppppppp', shipping)
         if data['customer']:
             print('1', " data['customer']")
             customer = request.env['res.partner'].search([('email', '=', data['customer']['email'])])
@@ -136,8 +137,8 @@ class ProductsApi(http.Controller):
             order = request.env['sale.order'].create({
                 "partner_id": order_partner.id,
                 "partner_invoice_id": order_partner.id,
-                # "partner_shipping_id": order_partner.id,
-                # "payment_partial_method_id": data['payment_method'],
+                "partner_shipping_id": order_partner.id,
+                # "payment_method_id": data['payment_method'],
                 "date_order": data['date_order'],
                 "pricelist_id": 1,
                 "payment_term_id": 1,
@@ -175,15 +176,15 @@ class ProductsApi(http.Controller):
                 "email": order_partner.email,
             },
             "payment": {
-                # "method": order.payment_partial_method_id.name,
+                "method": order.payment_term_id.name,
             },
-            # "shipping": {
-            #     "carrier": {
-            #         "carrier_name": shipping.name,
-            #         "tracking_number": order.id,
-            #         "awb_link": URL,
-            #     }
-            # }
+            "shipping": {
+                "carrier": {
+                    "carrier_name": shipping.name,
+                    "tracking_number": order.id,
+                    "awb_link": URL,
+                }
+            }
         }
         return final
 
