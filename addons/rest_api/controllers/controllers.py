@@ -57,7 +57,7 @@ def email_validate(email):
 
 
 class ProductsApi(http.Controller):
-    @http.route('/web/session/authenticate', type="json", auth='none', methods=["POST"])
+    @http.route('/web/session/authenticate', type="json", auth='none', methods=["POST"], website=True)
     def authenticate(self, db, login, password, base_location=None):
         request.session.authenticate(db, login, password)
         return request.env['ir.http'].session_info()
