@@ -18,6 +18,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_term_id']" position="after">
                 <field name="delivery_status1" invisible="1" />
+                <field name="ecom_sale_order_id"/>
             </xpath>
         </field>
     </record>

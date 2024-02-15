@@ -140,6 +140,7 @@ class ProductsApi(http.Controller):
                 "partner_shipping_id": order_partner.id,
                 # "payment_method_id": data['payment_method'],
                 "date_order": data['date_order'],
+                "ecom_sale_order_id": data['ecom_sale_order_id'],
                 "pricelist_id": 1,
                 "payment_term_id": 1,
                 'order_line': order_lines,
@@ -154,10 +155,11 @@ class ProductsApi(http.Controller):
         URL = base_url + 'report/pdf/sale.report_saleorder/' + str(order.id)
         final = {
             "order_id": order.id,
+            "ecom_sale_order_id": order.ecom_sale_order_id,
             "increment_id": order.name,
             "order_date": order.date_order,
             "status": order.delivery_status1,
-            "currency": 'USD',
+            "currency": order.currency_id.name,
             "totals": {
                 "subtotal": order.amount_untaxed,
                 "tax": order.amount_tax,
@@ -326,7 +328,7 @@ class ProductsApi(http.Controller):
     @http.route('/return_order', type="json", auth='user', csrf=False, methods=["POST"])
     def return_order(self, **data):
 
-        curr_order = request.env['sale.order'].search([('id', '=', int(data['rma_lines'][0]['order_id']))])
+        curr_order = request.env['sale.order'].search([('ecom_sale_order_id', '=', data['rma_lines'][0]['ecom_sale_order_id'])])[0]
         all_returned_order = request.env['return.order'].search([])
 
         if curr_order.name in all_returned_order.mapped('order_name'):
@@ -345,6 +347,32 @@ class ProductsApi(http.Controller):
                 "rma_number": data['rma_number'],
                 "magento_order_number": data['rma_lines'][0]['magento_order_number'],
             })
+            if curr_order.invoice_ids:
+                for rec in curr_order.invoice_ids:
+                    current_invoice = self.env['account.move'].search([('id', '=', rec.id)])
+                    if current_invoice.state == 'draft':
+                        test = current_invoice.button_cancel()
+                        current_invoice.state == 'cancel'
+                        curr_order.delivery_status1 = 'ordered_cancelled'
+                        curr_order.state = 'cancel'
+                        print('in if')
+                    elif current_invoice.state == 'posted':
+                        test = current_invoice.action_reverse()
+                        print('in elif')
+                        current_invoice.state == 'cancel'
+                        curr_order.delivery_status1 = 'ordered_cancelled'
+                        curr_order.state = 'cancel'
+                    else:
+                        test = current_invoice.action_reverse()
+                        current_invoice.state == 'cancel'
+                        curr_order.delivery_status1 = 'ordered_cancelled'
+                        curr_order.state = 'cancel'
+                        print('in else')
+                    # return test
+            else:
+                curr_order.state = 'cancel'
+                curr_order.delivery_status1 = 'ordered_cancelled'
+
         if return_order:
             return {
                 'status': "200",

@@ -22,6 +22,7 @@ class SaleOrderEdit(models.Model):
                     string="Delivery Status",
                     copy=False,store=True,readonly=True,
                     default='quot_created')
+    ecom_sale_order_id = fields.Char()
     is_taxcloud = fields.Char()
     is_taxcloud_configured = fields.Char()
 
@@ -134,27 +135,49 @@ class SaleOrderEdit(models.Model):
             print('no sale order')
 
     def action_confirm_with_id(self, id):
-        current_order  = self.env['sale.order'].search([('id', '=', id)])
+        current_order  = self.env['sale.order'].search([('ecom_sale_order_id', '=', id)])
         if current_order:
             current_order.state = 'sale'
             current_order.delivery_status1 = 'order_created'
 
+    def action_draft(self):
+        res = super(SaleOrderEdit, self).action_draft()
+        for rec in self:
+            rec.state = 'draft'
+            rec.delivery_status1 = 'quot_created'
+        return res
+
+    def action_cancel(self):
+        res = super(SaleOrderEdit, self).action_draft()
+        for rec in self:
+            rec.state = 'draft'
+            rec.delivery_status1 = 'ordered_cancelled'
+        return res
+
     def get_order_status(self, id):
-        current_order  = self.env['sale.order'].search([('id', '=', id)])
+        current_order  = self.env['sale.order'].search([('ecom_sale_order_id', '=', id)])[0]
+        print("current_order", current_order)
+        d_s = ''
         if current_order:
-            d_s = ''
-            if current_order.delivery_status1 == 'quot_created':
+            print("wwww", current_order.delivery_status1)
+            if current_order.delivery_status1 == 'quot_created' or current_order.state == "draft":
                 d_s = 'Quotation Created'
-            if current_order.delivery_status1 == 'order_created':
+                print("xxxxxxx", d_s)
+            if current_order.delivery_status1 == 'order_created' or current_order.state == "sale":
                 d_s = 'Order Created'
+                print("xxxxxxx", d_s)
             if current_order.delivery_status1 == 'order_invoiced':
                 d_s = 'Order Invoiced'
+                print("xxxxxxx", d_s)
             if current_order.delivery_status1 == 'order_delivered':
                 d_s = 'Order Delivered'
-            if current_order.delivery_status1 == 'ordered_cancelled':
+                print("xxxxxxx", d_s)
+            if current_order.delivery_status1 == 'ordered_cancelled' or current_order.state == "cancel":
                 d_s = 'Order Cancelled'
+                print("xxxxxxx", d_s)
             if current_order.delivery_status1 == 'order_confirmed':
                 d_s = 'Order Confirmed'
+                print("xxxxxxx", d_s)
             data = {
                 'status': "200",
                 'message': "success",
@@ -169,8 +192,6 @@ class SaleOrderEdit(models.Model):
         return data
 
 
-
-
 class OrderDone(models.TransientModel):
     _inherit = 'stock.immediate.transfer'
 
@@ -179,6 +200,22 @@ class OrderDone(models.TransientModel):
         for order in picks:
             order.sale_id.delivery_status1 = 'order_delivered'
         return super(OrderDone, self).process()
+
+
+class ConfigEdit(models.TransientModel):
+    _inherit = 'res.config.settings'
+
+    pos_user_id = fields.Char()
+    pos_one_time_valid = fields.Char()
+    pos_close_pos = fields.Char()
+    pos_order_delete = fields.Char()
+    pos_order_line_delete = fields.Char()
+    pos_qty_detail = fields.Char()
+    pos_discount_app = fields.Char()
+    pos_payment_perm = fields.Char()
+    pos_price_change = fields.Char()
+    pos_enable_session_report = fields.Char()
+
 
 
 class OrderPayment(models.TransientModel):
@@ -234,9 +271,11 @@ class ProductIMAG(models.Model):
     #     vals.update(picture_public)
     #     return super().create(vals)
 
+
 class ReturnOrder(models.Model):
     _name = 'return.order'
 
+    name = fields.Char()
     state = fields.Selection(string="State", selection=[('pending', 'Pending'), ('received', 'Received'), ], required=False, )
     order_name = fields.Char(string="Order Name", required=False,)
     order_id = fields.Integer(string="Order Id", required=False,)
@@ -246,3 +285,18 @@ class ReturnOrder(models.Model):
 
     def accept_return_order(self):
         self.state = 'received'
+
+
+class AccountPaymentRegisterEdit(models.TransientModel):
+    _inherit = 'account.payment.register'
+    _description = 'Register Payment'
+
+    def action_create_payments(self):
+        # picks = self.env['account.payment.register'].browse(self._context.get('active_ids', []))
+        # print("rrrrrrrrrrrrrrrrrrrrr", picks.__dir__())
+        # print("rrrrrrrrrrrrrrrrrrrrr", picks.id)
+        # for order in picks:
+        #     order.sale_id.delivery_status1 = 'order_delivered'
+        # print(self)
+        # print(super(AccountPaymentRegisterEdit, self).action_create_payments())
+        return super(AccountPaymentRegisterEdit, self).action_create_payments()
