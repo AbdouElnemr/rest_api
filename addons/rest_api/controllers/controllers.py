@@ -90,8 +90,7 @@ class ProductsApi(http.Controller):
     @http.route('/create_order', type="json", auth='user', csrf=False, methods=["POST"])
     def create_order(self, **data):
         order_partner = ''
-        shipping = request.env['delivery.carrier'].search([])[0]
-        print('pppppppppp', shipping)
+        shipping = request.env['delivery.carrier'].search([('id', '=', data['shipping_id'])])
         if data['customer']:
             print('1', " data['customer']")
             customer = request.env['res.partner'].search([('email', '=', data['customer']['email'])])
@@ -146,6 +145,7 @@ class ProductsApi(http.Controller):
                 'order_line': order_lines,
                 'picking_policy': 'direct',
             })
+            order.set_delivery_line(shipping, shipping.fixed_price)
             order.action_confirm()
             order.delivery_status1 = 'order_confirmed'
         # delivery = float(data['cod_fee'])
@@ -177,16 +177,16 @@ class ProductsApi(http.Controller):
                 "mobile": order_partner.mobile,
                 "email": order_partner.email,
             },
-            "payment": {
-                "method": order.payment_term_id.name,
-            },
+            # "payment": {
+            #     "method": order.payment_term_id.name,
+            # },
             "shipping": {
                 "carrier": {
                     "carrier_name": shipping.name,
-                    "tracking_number": order.id,
+                    "tracking_number": order.ecom_sale_order_id,
                     "awb_link": URL,
                 }
-            }
+            } if shipping else ""
         }
         return final
 
@@ -295,6 +295,43 @@ class ProductsApi(http.Controller):
                 'status': "400",
                 'message': "No Customers",
                 'data': p_methods,
+            }
+        return data
+
+    @http.route('/get_shipping_method', type="json", auth='user', csrf=False, methods=["GET"])
+    def get_shipping_method(self, **data):
+
+        shipping_methods = request.env['delivery.carrier'].search([])
+
+        data = {}
+        sh_methods = []
+        for rec in shipping_methods:
+            if rec.free_over:
+                vals = {
+                    'id': rec.id,
+                    'name': rec.name,
+                    'price': rec.fixed_price,
+                    'free_over': "Free if order amount is above " + str(rec.amount),
+                }
+            else:
+                vals = {
+                    'id': rec.id,
+                    'name': rec.name,
+                    'price': rec.fixed_price,
+                }
+
+            sh_methods.append(vals)
+        if sh_methods:
+            data = {
+                'status': "200",
+                'message': "success",
+                'data': sh_methods,
+            }
+        else:
+            data = {
+                'status': "400",
+                'message': "No Customers",
+                'data': sh_methods,
             }
         return data
 
